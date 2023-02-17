@@ -9,6 +9,11 @@ namespace Data_Processing_Project.Services
 {
     internal class CSVReader : IFileReader
     {
+        /// <summary>
+        /// Reading scv file
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns>List of transaction and count of error lines</returns>
         public async Task<ReadingResult> ReadAsync(string path)
         {         
             int invalidRecord = 0;
@@ -20,12 +25,12 @@ namespace Data_Processing_Project.Services
                 {                  
                     ReadingExceptionOccurred = args =>
                     {
-                        if (args.Exception is TypeConverterException || args.Exception is FieldValidationException)
+                        if (args.Exception is TypeConverterException || args.Exception is FieldValidationException || args.Exception is ReaderException)
                         {
                             invalidRecord++;
                             isRecordInvalid = true;
                             return false;
-                        }                 
+                        }   
                         return true;
                     }
                 };
@@ -48,8 +53,8 @@ namespace Data_Processing_Project.Services
                         Transactions = validRecord,
                         InvalidRecord = invalidRecord
                     };
-                }
-            }         
+                }               
+            }            
         }
     }
 }

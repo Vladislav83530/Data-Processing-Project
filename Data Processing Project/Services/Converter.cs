@@ -1,16 +1,49 @@
 ﻿using Data_Processing_Project.Model;
 using Data_Processing_Project.Services.Abstract;
+using System.Text.Json;
+
 
 namespace Data_Processing_Project.Services
 {
-    internal class Converter : IConverter
+    internal class Converter
     {
+        public IFileReader reader { private get; set; }
+        int countFile = 0;
+        public Converter(IFileReader reader)
+        {
+            this.reader = reader;
+        }
+
+        public async Task ProcessFile(FileSystemEventArgs e, string pathB, string filePath = "")
+        {
+            countFile++;
+
+            var readingResult = new ReadingResult();
+            if (!String.IsNullOrEmpty(filePath))
+                readingResult = await reader.ReadAsync(filePath);
+            else
+                readingResult = await  reader.ReadAsync(e.FullPath);
+
+            var output = ConvertToOutput(readingResult.Transactions);
+
+            string json = JsonSerializer.Serialize(output);
+            using (StreamWriter writer = new StreamWriter(pathB + $"output{countFile}.json"))
+            {
+                writer.WriteLine(json);
+            }
+
+            if (!String.IsNullOrEmpty(filePath))
+                File.Delete(filePath);
+            else
+                File.Delete(e.FullPath);
+        }
+
         /// <summary>
         /// Convert list of Transaction to list of Output
         /// </summary>
         /// <param name="transactions"></param>
         /// <returns>list of Output</returns>
-        public async Task<IEnumerable<Output>> ConvertToOutput(IEnumerable<Transaction> transactions)
+        private IEnumerable<Output> ConvertToOutput(IEnumerable<Transaction> transactions)
         {
             List<Output> result = new List<Output>();
 

@@ -6,6 +6,11 @@ namespace Data_Processing_Project.Services
 {
     internal class TXTReader : IFileReader
     {
+        /// <summary>
+        /// Reading txt file
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns>List of transaction and count of error lines</returns>
         public async Task<ReadingResult> ReadAsync(string path)
         {
             IEnumerable<string> records;
@@ -22,8 +27,7 @@ namespace Data_Processing_Project.Services
             {
                 try
                 {
-                    var transaction = await ParseStringToTransactionAsync(record);
-                    transactions.Add(await ParseStringToTransactionAsync(record));
+                    transactions.Add(ParseStringToTransaction(record));
                 }
                 catch
                 {
@@ -37,7 +41,13 @@ namespace Data_Processing_Project.Services
             };
         }
 
-        private async Task<Transaction> ParseStringToTransactionAsync(string record)
+        /// <summary>
+        /// Parse string to Transaction model
+        /// </summary>
+        /// <param name="record"></param>
+        /// <returns>Transaction</returns>
+        /// <exception cref="Exception"></exception>
+        private Transaction ParseStringToTransaction(string record)
         {
             var fields = record.Split(',');
             foreach(var field in fields)
@@ -49,7 +59,7 @@ namespace Data_Processing_Project.Services
             var transaction = new Transaction();
             transaction.FirstName= fields[0].Trim();
             transaction.LastName= fields[1].Trim();
-            transaction.Address = (fields[2]).Trim().Replace("\"", "");
+            transaction.Address = fields[2].Trim().Replace("\"", "");
             transaction.Payment =  Decimal.Parse(fields[5].Trim(), CultureInfo.InvariantCulture);
             transaction.Date = DateTime.ParseExact(fields[6].Trim(), "yyyy-dd-mm", null);
             transaction.AccountNumber = Int64.Parse(fields[7].Trim(), CultureInfo.InvariantCulture);
