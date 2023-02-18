@@ -1,65 +1,75 @@
-﻿using CsvHelper;
-using Data_Processing_Project;
-using Data_Processing_Project.Services;
-using Data_Processing_Project.Services.Abstract;
-using System;
-using System.Configuration;
+﻿using Data_Processing_Project;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
-CSVReader reader= new CSVReader();
-//var result = await reader.ReadAsync(@"");
-//foreach(var item in result.Transactions)
-//{
-//    Console.WriteLine(item.FirstName);
-//    Console.WriteLine(item.LastName);
-//    Console.WriteLine(item.Address);
-//    Console.WriteLine(item.Payment);
-//    Console.WriteLine(item.Date.ToString("yyyy -dd-mm"));
-//    Console.WriteLine(item.AccountNumber);
-//    Console.WriteLine(item.Service);
-//    Console.WriteLine("----------------------");
-//}
-//Console.WriteLine(result.InvalidRecord);
-//Converter converter = new();
-//var results = await converter.ConvertToOutput(result.Transactions);
-//foreach(var item in results)
-//{
-//    Console.WriteLine(item.City);
-//    foreach(var service in item.Services)
-//    {
-//        Console.WriteLine($"-----{service.Name}");
-//        foreach(var payer in service.Payers)
-//        {
-//            Console.WriteLine($"---------{payer.Name}");
-//            Console.WriteLine($"---------{payer.Payment}");
-//            Console.WriteLine($"---------{payer.Date}");
-//            Console.WriteLine($"---------{payer.AccountNumber}");
-//            Console.WriteLine();
-//        }
-//        Console.WriteLine($"-----{service.Total}");
-//        Console.WriteLine();
-//    }
-//    Console.WriteLine(item.Total);
-//    Console.WriteLine();
-//}
+class Program
+{
+    static void Main(string[] args)
+    {
+        var command = args.AsQueryable().FirstOrDefault();
+        var services = new ServiceCollection();
+        ConfigureServices(services);
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+        Application app = serviceProvider.GetService<Application>();
+        try
+        {
+            if (command == null)
+            {
+                Console.WriteLine("Enter command: ");
+                command = Console.ReadLine()!.Trim();
+                if (command == "Start")
+                    app.Start();
+                else if (command == "Stop")
+                    app.Stop();
+            }
+        }
+        catch (Exception ex)
+        {
+            app.HandleError(ex);
+        }
+        Console.ReadLine();
+    }
+    private static void ConfigureServices(ServiceCollection services)
+    {
+        services.AddLogging(configure => configure.AddConsole())
+        .AddTransient<Application>();
+    }
+}
 
-Converter convert;
-FileManager fm = new FileManager();
-fm.ManageFile();
+class Application
+{
+    private readonly ILogger _logger;
+    public Application(ILogger<Application> logger)
+    {
+        _logger = logger;
+    }
 
-Console.Read();
+    public async Task  Start()
+    {
+        _logger.LogInformation($"MyApplication Started at {DateTime.Now}");
+        try
+        {
+            FileManager fm = new FileManager(_logger);
+            await fm.ManageFile();
+            Console.Read();
+        }
+        catch
+        {
+            throw;
+        }
+        //finally
+        //{
+        //    _logger.LogCritical($"Fix bag");
+        //}
+    }
 
+    public void Stop()
+    {
+        _logger.LogInformation($"Application Stopped at {DateTime.Now}");
+    }
 
-//TXTReader readerTXT = new TXTReader();
-//var resultTXT = await readerTXT.ReadAsync(@"C:\Users\vladp\OneDrive\Робочий стіл\FILE.txt");
-//foreach (var item in resultTXT.Transactions)
-//{
-//    Console.WriteLine(item.FirstName);
-//    Console.WriteLine(item.LastName);
-//    Console.WriteLine(item.Address);
-//    Console.WriteLine(item.Payment);
-//    Console.WriteLine(item.Date.ToString("yyyy-dd-mm"));
-//    Console.WriteLine(item.AccountNumber);
-//    Console.WriteLine(item.Service);
-//    Console.WriteLine("----------------------");
-//}
-//Console.WriteLine(resultTXT.InvalidRecord);
+    public void HandleError(Exception ex)
+    {
+        _logger.LogError($"Application Error Encountered at {DateTime.Now} & Error is: {ex.Message}");
+    }
+}

@@ -8,22 +8,26 @@ namespace Data_Processing_Project.Services
     internal class Converter
     {
         public IFileReader reader { private get; set; }
-        int countFile = 0;
         public Converter(IFileReader reader)
         {
             this.reader = reader;
         }
 
-        public async Task ProcessFile(FileSystemEventArgs e, string pathB, string filePath = "")
+        public async Task ProcessFileAsync(string filePath, string pathB, int countFile)
         {
-            countFile++;
+            var readingResult = await reader.ReadAsync(filePath);
+            var output = ConvertToOutput(readingResult.Transactions);
 
-            var readingResult = new ReadingResult();
-            if (!String.IsNullOrEmpty(filePath))
-                readingResult = await reader.ReadAsync(filePath);
-            else
-                readingResult = await  reader.ReadAsync(e.FullPath);
+            string json =  JsonSerializer.Serialize(output);
+            using (StreamWriter writer = new StreamWriter(pathB + $"output{countFile}.json"))
+            {
+                await writer.WriteLineAsync(json);
+            }
+        }
 
+        public void ProcessFile(FileSystemEventArgs e, string pathB, int countFile)
+        {
+            var readingResult = reader.ReadAsync(e.FullPath).Result;
             var output = ConvertToOutput(readingResult.Transactions);
 
             string json = JsonSerializer.Serialize(output);
@@ -31,11 +35,6 @@ namespace Data_Processing_Project.Services
             {
                 writer.WriteLine(json);
             }
-
-            if (!String.IsNullOrEmpty(filePath))
-                File.Delete(filePath);
-            else
-                File.Delete(e.FullPath);
         }
 
         /// <summary>
