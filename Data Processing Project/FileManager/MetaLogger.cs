@@ -3,11 +3,11 @@ using System.Configuration;
 using System.Timers;
 using Timer = System.Timers.Timer;
 
-namespace Data_Processing_Project
+namespace Data_Processing_Project.FileManager_
 {
     internal class MetaLogger
     {
-        private readonly MetaLogInfo metaLogInfo;
+        private MetaLogInfo metaLogInfo;
         public MetaLogger(FileManager fm)
         {
             metaLogInfo = fm._converter.metaLogInfo;
@@ -43,10 +43,7 @@ namespace Data_Processing_Project
                 wr.WriteLine(result);
             }
 
-            metaLogInfo.ParsedLines = 0;
-            metaLogInfo.ParsedFiles = 0;
-            metaLogInfo.FoundError = 0;
-            metaLogInfo.InvalidFiles = new List<string>();
+            metaLogInfo.Dispose();
             var now = DateTime.Now;
             var midnight = now.Date.AddDays(1);
 

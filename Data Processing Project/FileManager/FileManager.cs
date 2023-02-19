@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System.Configuration;
 
-namespace Data_Processing_Project
+namespace Data_Processing_Project.FileManager_
 {
     internal class FileManager
     {
@@ -32,12 +32,12 @@ namespace Data_Processing_Project
             if (!Directory.Exists(pathB))
                 Directory.CreateDirectory(pathB);
 
-            CountFile = Directory.GetFiles(pathB).Length+1;
-            if(CountFile == 0)
-                CountFile= 1;
+            CountFile = Directory.GetFiles(pathB).Length + 1;
+            if (CountFile == 0)
+                CountFile = 1;
 
             watcher.Created += new FileSystemEventHandler(Watcher_Created);
-            await CheckAndProcessFolderAsync(); 
+            await CheckAndProcessFolderAsync();
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace Data_Processing_Project
         /// <returns></returns>
         private async Task CheckAndProcessFolderAsync()
         {
-            var files = Directory.GetFiles(pathA, "*.*").Where(f => f.EndsWith(".csv") || f.EndsWith(".txt")); 
+            var files = Directory.GetFiles(pathA, "*.*").Where(f => f.EndsWith(".csv") || f.EndsWith(".txt"));
             if (files.FirstOrDefault() != null)
             {
                 foreach (var x in files)

@@ -2,7 +2,7 @@
 using Data_Processing_Project.Services.Abstract;
 using System.Text.Json;
 
-namespace Data_Processing_Project
+namespace Data_Processing_Project.FileManager_
 {
     internal class Converter
     {
@@ -73,7 +73,7 @@ namespace Data_Processing_Project
         /// <param name="transactions"></param>
         /// <returns>list of Output</returns>
         private IEnumerable<Output> ConvertToOutput(IEnumerable<Transaction> transactions)
-            {
+        {
             List<Output> result = new List<Output>();
             if (transactions != null)
             {
