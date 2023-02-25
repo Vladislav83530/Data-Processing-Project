@@ -2,38 +2,24 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-class Program
+
+var services = new ServiceCollection();
+ConfigureServices(services);
+ServiceProvider serviceProvider = services.BuildServiceProvider();
+Application app = serviceProvider.GetService<Application>();
+try
 {
-    static void Main(string[] args)
-    {
-        var command = args.AsQueryable().FirstOrDefault();
-        var services = new ServiceCollection();
-        ConfigureServices(services);
-        ServiceProvider serviceProvider = services.BuildServiceProvider();
-        Application app = serviceProvider.GetService<Application>();
-        try
-        {
-            if (command == null)
-            {
-                Console.WriteLine("Enter command: ");
-                command = Console.ReadLine()!.Trim();
-                if (command == "Start")
-                    app.Start();
-                else if (command == "Stop")
-                    app.Stop();
-            }
-        }
-        catch (Exception ex)
-        {
-            app.HandleError(ex);
-        }
-        Console.ReadLine();
-    }
-    private static void ConfigureServices(ServiceCollection services)
-    {
-        services.AddLogging(configure => configure.AddConsole())
-        .AddTransient<Application>();
-    }
+    app.Start();
+}
+catch (Exception ex)
+{
+    app.HandleError(ex);
+}
+Console.ReadLine();
+static void ConfigureServices(ServiceCollection services)
+{
+    services.AddLogging(configure => configure.AddConsole())
+    .AddTransient<Application>();
 }
 
 class Application
@@ -44,32 +30,49 @@ class Application
         _logger = logger;
     }
 
-    public async Task  Start()
+    public async Task Start()
     {
         _logger.LogInformation($"MyApplication Started at {DateTime.Now}");
         try
         {
-            FileManager fm = new FileManager(_logger);
-            await fm.ManageFile();
-            Console.Read();
+            var work = true;
+            while (work)
+            {
+                Console.WriteLine("Add file to folder_a or Enter command: reset/stop");             
+                FileManager fm = new FileManager(_logger);
+                await fm.ManageFile();
+                MetaLogger ml = new MetaLogger(fm);
+                ml.MetaLogTimer();
+                string command = Console.ReadLine()!.Trim().ToLower();
+                if (command == "reset")
+                {
+                    Reset();
+                }
+                else if (command == "stop")
+                {
+                    Stop();
+                    work = false;
+                }
+            }
         }
         catch
         {
             throw;
         }
-        //finally
-        //{
-        //    _logger.LogCritical($"Fix bag");
-        //}
     }
 
     public void Stop()
     {
-        _logger.LogInformation($"Application Stopped at {DateTime.Now}");
+        _logger.LogInformation($"Application Stopped at {DateTime.Now}. Press some button to end");
     }
 
     public void HandleError(Exception ex)
     {
         _logger.LogError($"Application Error Encountered at {DateTime.Now} & Error is: {ex.Message}");
+    }
+
+    public void Reset()
+    {
+        _logger.LogInformation($"Application Reset at {DateTime.Now}.");
     }
 }

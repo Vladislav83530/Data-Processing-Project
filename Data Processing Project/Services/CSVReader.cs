@@ -23,7 +23,7 @@ namespace Data_Processing_Project.Services
         /// <param name="path"></param>
         /// <returns>List of transaction and count of error lines</returns>
         public async Task<ReadingResult> ReadAsync(string path)
-        {         
+        {        
             int invalidRecord = 0;
             bool isRecordInvalid = false;
 
@@ -37,7 +37,6 @@ namespace Data_Processing_Project.Services
                         if (args.Exception is TypeConverterException || args.Exception is FieldValidationException || args.Exception is ReaderException )
                         {
                             invalidRecord++;
-                            _logger.LogCritical("Invalid line: {0}", args.Exception.Message.Trim().Split(":").TakeLast(1));
                             isRecordInvalid = true;
                             return false;
                         }   
@@ -65,7 +64,9 @@ namespace Data_Processing_Project.Services
                         _logger.LogCritical("Invalid header in file {0}", path);
                     }
                 }
-                _logger.LogInformation("File {0} have {1} invalid lines", path, invalidRecord);
+
+                if(invalidRecord > 0)
+                    _logger.LogWarning("File {0} have {1} invalid lines", path, invalidRecord);
                 _logger.LogInformation("File {0} have {1} valid lines", path, validRecord.Count());
 
                 File.Delete(path);

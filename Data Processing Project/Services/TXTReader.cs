@@ -21,29 +21,37 @@ namespace Data_Processing_Project.Services
         /// <returns>List of transaction and count of error lines</returns>
         public async Task<ReadingResult> ReadAsync(string path)
         {
+            int invalidRecords = 0;
             List<string> records;
             using (StreamReader streamReader = new(path))
             {
+                _logger.LogInformation("Start processing file: {0}", path);
                 string fileContent = await streamReader.ReadToEndAsync();
                 records = fileContent.Split("\r\n", StringSplitOptions.RemoveEmptyEntries).ToList();
             }
             List<Transaction> transactions = new List<Transaction>();
-            int invalidRecords = 0;
 
-            Parallel.ForEach(records, async record =>
+            foreach(var record in records) 
             {
                 try
                 {
-                    transactions.Add(await ParseStringToTransaction(record));
+                    if (!String.IsNullOrEmpty(record))
+                    {
+                        transactions.Add(await ParseStringToTransaction(record));
+                    }
+                    else
+                    {
+                        throw new Exception();
+                    }
                 }
                 catch
                 {
-                    _logger.LogCritical("Invalid line {0}", record);
                     invalidRecords++;
                 }
-            });
+            };
 
-            _logger.LogInformation("File {0} have {1} invalid lines", path, invalidRecords);
+            if(invalidRecords > 0)
+                _logger.LogWarning("File {0} have {1} invalid lines", path, invalidRecords);
             _logger.LogInformation("File {0} have {1} valid lines", path, transactions.Count());
 
             File.Delete(path);
@@ -63,7 +71,7 @@ namespace Data_Processing_Project.Services
         /// <exception cref="Exception"></exception>
         private async Task<Transaction> ParseStringToTransaction(string record)
         {
-            var fields = record.Split(',');
+            var fields = record.Split(", ");
             foreach (var field in fields)
             {
                 if (string.IsNullOrEmpty(field))
